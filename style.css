@@ -1,0 +1,24 @@
+div.box {
+  border: 1px solid;
+}
+
+p.head {
+  float: left;
+  margin: 10px 10px;
+  padding-left: 22px;
+}
+
+p.end {
+  margin: 10px 10px;
+  padding-left: 286px;
+}
+
+p.name {
+  float: left;
+  margin: 10px 10px;
+}
+
+input.dist {
+  max-width: 50px;
+  margin: 10px 10px;
+}
