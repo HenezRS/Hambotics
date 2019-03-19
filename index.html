@@ -14,11 +14,14 @@
       <hr />
       <div class="box container-head">
         <p class="head"></p>
+        <!--<p class="head"></p>
         <p class="head">To A</p>
         <p class="head">To B</p>
         <p class="head">To C</p>
-        <p class="end">To D</p>
+        <p class="head">To D</p>
+        <p class="head">To D</p>-->
       </div>
+
       <div id="container">
         <!--<div class="box a">
           <p class="name">Box A</p>
@@ -46,7 +49,13 @@
           />
         </div>-->
       </div>
-      <button id="calc">Recalculate</button>
+      <button id="calc" onclick="recalculateClick()">Recalculate</button>
+      <button id="rand" onclick="randomClick()">Random All</button>
+      <button id="add" onclick="addBoxClick()">Add Box</button>
+      <button id="remove" onclick="removeBoxClick()">Remove Box</button>
+      <br />
+      <p class="head">Limit Top Results:</p>
+      <input type="number" class="dist" id="filter" value="5" />
       <!--<canvas
         class="draw"
         width="800"

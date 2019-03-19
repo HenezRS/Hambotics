@@ -22,3 +22,11 @@ input.dist {
   max-width: 50px;
   margin: 10px 10px;
 }
+
+#filter {
+  float: left;
+}
+
+button {
+  margin: 10px 5px;
+}

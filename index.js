@@ -10,7 +10,7 @@ class Route {
       this.distCost[i].print();
       costTotal += this.distCost[i].cost;
     }
-    console.log(`Total cost: ${costTotal}`);
+    //console.log(`Total cost: ${costTotal}`);
   }
 
   toString() {
@@ -56,23 +56,35 @@ class HamBox {
   }
 }
 
+let boxes;
+let routes;
+let boxIndexes = ["A", "B", "C", "D", "E", "F", "G", "H"];
+let startId = "A";
+let boxCount = 3;
+let boxMin = 2;
+let boxMax = boxIndexes.length;
+
 window.addEventListener("load", function() {
   console.log("Hambotic: ONLINE");
+  restart();
+});
 
-  let boxes = [
-    new HamBox("A"),
-    new HamBox("B"),
-    new HamBox("C"),
-    new HamBox("D")
-    //new HamBox("E")
-  ];
-  let startId = "A";
+function restart() {
+  boxes = [];
+
+  for (let i = 0; i < boxCount; ++i) {
+    boxes.push(new HamBox(boxIndexes[i]));
+  }
 
   generateDistCosts(boxes);
+  processAll(boxes);
+}
+
+function processAll(boxes) {
   let routesString = getAllRouteCombinations(boxes);
-  console.log(routesString);
+  //console.log(routesString);
   routesString = filterRoutesByStartId(routesString, startId);
-  let routes = calcRoutes(boxes, routesString);
+  routes = calcRoutes(boxes, routesString);
   //console.log(routes);
 
   let bestRoute;
@@ -91,16 +103,18 @@ window.addEventListener("load", function() {
   });
 
   for (let i = 0; i < routes.length; ++i) {
-    routes[i].print();
+    //routes[i].print();
   }
 
-  printBoxDistances(boxes);
+  //printBoxDistances(boxes);
   printRoutes(routes);
 
   placeBoxInputElements(boxes);
-});
+}
 
 function placeBoxInputElements(boxes) {
+  let containerHead = document.getElementsByClassName("container-head");
+
   boxes.forEach(element => {
     let eName = document.createElement("p");
     eName.innerHTML = `Box ${element.id}`;
@@ -129,7 +143,100 @@ function placeBoxInputElements(boxes) {
 
     let container = document.getElementById("container");
     container.appendChild(eDiv);
+
+    let eHead = document.createElement("p");
+    eHead.innerHTML = `To ${element.id}`;
+    eHead.className += "head";
+
+    containerHead[0].appendChild(eHead);
   });
+  let eBr = document.createElement("br");
+  containerHead[0].appendChild(eBr);
+  eBr = document.createElement("br");
+  containerHead[0].appendChild(eBr);
+}
+
+function recalculateClick() {
+  recalculateAll(boxes);
+  clearFrontContainer();
+  processAll(boxes);
+}
+
+function randomClick() {
+  randomAll(boxes);
+  clearFrontContainer();
+  processAll(boxes);
+}
+
+function addBoxClick() {
+  if (boxCount < boxMax) {
+    boxCount = Math.max(boxMin, Math.min(boxCount + 1, boxMax));
+    clearFrontContainer();
+    restart();
+  }
+}
+
+function removeBoxClick() {
+  if (boxCount > boxMin) {
+    boxCount = Math.max(boxMin, Math.min(boxCount - 1, boxMax));
+    clearFrontContainer();
+    restart();
+  }
+}
+
+function randomAll(boxes) {
+  let box1;
+  let box2;
+  for (let i = 0; i < boxes.length; ++i) {
+    box1 = boxes[i];
+    for (let j = 0; j < boxes.length; ++j) {
+      box2 = boxes[j];
+
+      if (box1.id !== box2.id) {
+        setDistCostBetweenBoxes(box1, box2, 1 + Math.floor(Math.random() * 20));
+      }
+    }
+  }
+}
+
+function recalculateAll(boxes) {
+  console.log("trigger recalc");
+  let box1;
+  let box2;
+  for (let i = 0; i < boxes.length; ++i) {
+    box1 = boxes[i];
+    for (let j = 0; j < boxes.length; ++j) {
+      box2 = boxes[j];
+
+      let node = document.getElementsByClassName(
+        `dist from-${box1.id} to-${box2.id}`
+      );
+      let s = node[0].value;
+
+      if (box1.id !== box2.id) {
+        //console.log(parseInt(s));
+        setDistCostBetweenBoxes(box1, box2, parseInt(s));
+        //setDistCostBetweenBoxes(box1, box2, 1);
+      }
+    }
+  }
+}
+
+function clearFrontContainer() {
+  let div = document.getElementById("container");
+  while (div.firstChild) {
+    div.removeChild(div.firstChild);
+  }
+
+  div = document.getElementById("output");
+  while (div.firstChild) {
+    div.removeChild(div.firstChild);
+  }
+
+  div = document.getElementsByClassName("container-head");
+  while (div[0].firstChild) {
+    div[0].removeChild(div[0].firstChild);
+  }
 }
 
 function generateDistCosts(boxes) {
@@ -163,10 +270,12 @@ function generateDistCosts(boxes) {
 function printRoutes(routes) {
   let output = document.getElementById("output");
   let node = document.createElement("ol");
-  node.style.color = "red";
   let s = "";
 
-  for (let i = 0; i < routes.length; ++i) {
+  let filter = document.getElementById("filter");
+  let filterLimit = Math.max(1, Math.min(filter.value, routes.length));
+
+  for (let i = 0; i < filterLimit; ++i) {
     let li = document.createElement("li");
     let route = routes[i];
     s = route.toString();
@@ -178,7 +287,7 @@ function printRoutes(routes) {
 }
 
 function printBoxDistances(boxes) {
-  console.log(boxes);
+  //console.log(boxes);
   let output = document.getElementById("output");
   for (let i = 0; i < boxes.length; ++i) {
     let box = boxes[i];
@@ -305,6 +414,18 @@ function checkExistingDistCostBetweenBoxes(box1, box2) {
   }
 
   return null;
+}
+
+function setDistCostBetweenBoxes(box1, box2, newCost) {
+  let boxId1 = box1.id;
+  let boxId2 = box2.id;
+  for (let i = 0; i < box1.distCost.length; ++i) {
+    if (box1.distCost[i].idTo === boxId2) {
+      box1.distCost[i].cost = newCost;
+      return true;
+    }
+  }
+  return false;
 }
 
 //https://stackoverflow.com/questions/40654895/javascript-generating-all-combinations-of-an-array-considering-the-order
