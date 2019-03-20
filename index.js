@@ -1,10 +1,38 @@
+/*
+--- H A M B O T I C S --- Author: Henry Saal
+
+Special Thanks: combo() function from StackOverflow user Keith.
+
+--- HOW TO USE ---
+Most controls are in the html DOM.
+- On first load: 
+    ~ There will be 4 boxes (starting bay 'A', box 'B', box 'C' and box 'D')
+    ~ Each distance cost will be randomly filled with a value 1 to 20
+    ~ By default, the top 5 quickest routes will be listed. Changed by 'Limit Top Results' field
+- Change distance costs between boxes by filling the appropriate text fields.
+- Use 'Recalculate' button to take the new inputs and print out the correct "Shortest Routes"
+- Use 'Random All' button to automatically fill each DistCost
+- Use 'Add Box' and 'Remove Box' to manipulate the number of boxes.
+    ~ There can't be less than 2 boxes.
+    ~ There can't be more boxes than the number of ID chars contained in 'boxIndexes' below.
+
+
+--- WHAT I'D DO WITH MORE TIME ---
+- Make the DOM look nicer. The HTML CSS is pretty hacky. Even fulfil the extra Canvas milestone
+- Use a proper algorithm for mapping efficient routes. This program just calculates all possibilities and
+  filters for the most relevant. It would get extremely slow as you add boxes.
+- rewrite the combo() function found from stackoverflow by user Keith to be my own
+- remove boxes and routes vars from the global scope. For most of the project they were scoped and passed
+  around but towards the end I made them global in the interest of time. Wouldn't be good for scalability
+*/
+
 import { HamBox, Route, DistCost } from "./models.js";
 
 let boxes;
 let routes;
 let boxIndexes = ["A", "B", "C", "D", "E", "F", "G", "H"];
 let startId = "A";
-let boxCount = 3;
+let boxCount = 4;
 let boxMin = 2;
 let boxMax = boxIndexes.length;
 
@@ -19,6 +47,82 @@ window.addEventListener("load", function() {
 
   restart();
 });
+
+//recalculateClick() called by the Recalculate button click
+//takes all the user inputs from the view and reruns the routes/boxes calculations
+function recalculateClick() {
+  recalculateAll(boxes);
+  clearFrontContainer();
+  processAll(boxes);
+}
+
+//randomClick() called by the Random All button
+//randomises all DistCost input fields and reloads the DOM to reflect
+function randomClick() {
+  randomAll(boxes);
+  clearFrontContainer();
+  processAll(boxes);
+}
+
+//addBoxClick() called by the Add Box button
+//reloads everything with +1 boxes if the box limit has not been hit
+function addBoxClick() {
+  if (boxCount < boxMax) {
+    boxCount = Math.max(boxMin, Math.min(boxCount + 1, boxMax));
+    clearFrontContainer();
+    restart();
+  }
+}
+
+//removeBoxClick() called by the Remove Box button
+//reloads everything with -1 boxes. Will not trigger if the resulting box count would be less than 2
+function removeBoxClick() {
+  if (boxCount > boxMin) {
+    boxCount = Math.max(boxMin, Math.min(boxCount - 1, boxMax));
+    clearFrontContainer();
+    restart();
+  }
+}
+
+//randomAll() gives random dist costs to all boxes
+function randomAll(boxes) {
+  let box1;
+  let box2;
+  for (let i = 0; i < boxes.length; ++i) {
+    box1 = boxes[i];
+    for (let j = 0; j < boxes.length; ++j) {
+      box2 = boxes[j];
+
+      if (box1.id !== box2.id) {
+        setDistCostBetweenBoxes(box1, box2, 1 + Math.floor(Math.random() * 20));
+      }
+    }
+  }
+}
+
+//recalculateAll() takes user input from the DOM fields and gives the updated
+//DistCost values to our HamBox's
+function recalculateAll(boxes) {
+  let box1;
+  let box2;
+  for (let i = 0; i < boxes.length; ++i) {
+    box1 = boxes[i];
+    for (let j = 0; j < boxes.length; ++j) {
+      box2 = boxes[j];
+
+      let node = document.getElementsByClassName(
+        `dist from-${box1.id} to-${box2.id}`
+      );
+      let s = node[0].value;
+
+      if (box1.id !== box2.id) {
+        //console.log(parseInt(s));
+        setDistCostBetweenBoxes(box1, box2, parseInt(s));
+        //setDistCostBetweenBoxes(box1, box2, 1);
+      }
+    }
+  }
+}
 
 //Restart() called on window load & whenever AddBox()/DeleteBox() is called
 //Reinitialises all HamBox objects and generates new random values for all DistCosts.
@@ -115,82 +219,6 @@ function placeBoxInputElements(boxes) {
   containerHead[0].appendChild(eBr);
   eBr = document.createElement("br");
   containerHead[0].appendChild(eBr);
-}
-
-//recalculateClick() called by the Recalculate button click
-//takes all the user inputs from the view and reruns the routes/boxes calculations
-function recalculateClick() {
-  recalculateAll(boxes);
-  clearFrontContainer();
-  processAll(boxes);
-}
-
-//randomClick() called by the Random All button
-//randomises all DistCost input fields and reloads the DOM to reflect
-function randomClick() {
-  randomAll(boxes);
-  clearFrontContainer();
-  processAll(boxes);
-}
-
-//addBoxClick() called by the Add Box button
-//reloads everything with +1 boxes if the box limit has not been hit
-function addBoxClick() {
-  if (boxCount < boxMax) {
-    boxCount = Math.max(boxMin, Math.min(boxCount + 1, boxMax));
-    clearFrontContainer();
-    restart();
-  }
-}
-
-//removeBoxClick() called by the Remove Box button
-//reloads everything with -1 boxes. Will not trigger if the resulting box count would be less than 2
-function removeBoxClick() {
-  if (boxCount > boxMin) {
-    boxCount = Math.max(boxMin, Math.min(boxCount - 1, boxMax));
-    clearFrontContainer();
-    restart();
-  }
-}
-
-//randomAll() gives random dist costs to all boxes
-function randomAll(boxes) {
-  let box1;
-  let box2;
-  for (let i = 0; i < boxes.length; ++i) {
-    box1 = boxes[i];
-    for (let j = 0; j < boxes.length; ++j) {
-      box2 = boxes[j];
-
-      if (box1.id !== box2.id) {
-        setDistCostBetweenBoxes(box1, box2, 1 + Math.floor(Math.random() * 20));
-      }
-    }
-  }
-}
-
-//recalculateAll() takes user input from the DOM fields and gives the updated
-//DistCost values to our HamBox's
-function recalculateAll(boxes) {
-  let box1;
-  let box2;
-  for (let i = 0; i < boxes.length; ++i) {
-    box1 = boxes[i];
-    for (let j = 0; j < boxes.length; ++j) {
-      box2 = boxes[j];
-
-      let node = document.getElementsByClassName(
-        `dist from-${box1.id} to-${box2.id}`
-      );
-      let s = node[0].value;
-
-      if (box1.id !== box2.id) {
-        //console.log(parseInt(s));
-        setDistCostBetweenBoxes(box1, box2, parseInt(s));
-        //setDistCostBetweenBoxes(box1, box2, 1);
-      }
-    }
-  }
 }
 
 //clearFrontContainer() removes all updatable DOM elements so that new ones

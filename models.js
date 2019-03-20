@@ -1,3 +1,5 @@
+//Route objects are the completely formatted and User ready objects created with the
+//HamBox and their associated DistCost objects.
 export class Route {
   constructor() {
     this.distCost = [];
@@ -5,12 +7,9 @@ export class Route {
   }
 
   print() {
-    let costTotal = 0;
     for (let i = 0; i < this.distCost.length; ++i) {
       this.distCost[i].print();
-      costTotal += this.distCost[i].cost;
     }
-    //console.log(`Total cost: ${costTotal}`);
   }
 
   toString() {
@@ -18,7 +17,6 @@ export class Route {
     for (let i = 0; i < this.distCost.length; ++i) {
       s += this.distCost[i].toString();
     }
-    //console.log(`Total cost: ${this.costTotal}`);
     return `${s} : TOTAL: ${this.costTotal}`;
   }
 
@@ -30,6 +28,19 @@ export class Route {
   }
 }
 
+//HamBox objects contain a collection of DistCosts and an ID
+export class HamBox {
+  constructor(id) {
+    this.id = id;
+    this.distCost = [];
+  }
+  addDistCost(distCost) {
+    this.distCost.push(distCost);
+  }
+}
+
+//DistCosts are contained within HamBox's. It stores relational information that tells
+//HamBox's how far each other HamBox is from themselves.
 export class DistCost {
   constructor(idFrom, idTo, cost) {
     this.idFrom = idFrom;
@@ -45,15 +56,5 @@ export class DistCost {
     return (
       `${this.idFrom}>${this.idTo} (${this.cost})` + "    ---   "
     ).replace(/ /g, "&nbsp;");
-  }
-}
-
-export class HamBox {
-  constructor(id) {
-    this.id = id;
-    this.distCost = [];
-  }
-  addDistCost(distCost) {
-    this.distCost.push(distCost);
   }
 }
