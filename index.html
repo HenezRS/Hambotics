@@ -4,16 +4,17 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <script src="index.js"></script>
+    <script type="module" src="index.js"></script>
+    <script type="module" src="models.js"></script>
     <link rel="stylesheet" href="style.css" />
     <title>Hambotics</title>
   </head>
   <body>
     <main id="main">
+      <h4>Shortest Routes:</h4>
       <div id="output"></div>
       <hr />
       <div class="box container-head">
-        <p class="head"></p>
         <!--<p class="head"></p>
         <p class="head">To A</p>
         <p class="head">To B</p>
@@ -49,10 +50,10 @@
           />
         </div>-->
       </div>
-      <button id="calc" onclick="recalculateClick()">Recalculate</button>
-      <button id="rand" onclick="randomClick()">Random All</button>
-      <button id="add" onclick="addBoxClick()">Add Box</button>
-      <button id="remove" onclick="removeBoxClick()">Remove Box</button>
+      <button id="calc">Recalculate</button>
+      <button id="rand">Random All</button>
+      <button id="add">Add Box</button>
+      <button id="remove">Remove Box</button>
       <br />
       <p class="head">Limit Top Results:</p>
       <input type="number" class="dist" id="filter" value="5" />

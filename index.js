@@ -1,60 +1,4 @@
-class Route {
-  constructor() {
-    this.distCost = [];
-    this.costTotal = 0;
-  }
-
-  print() {
-    let costTotal = 0;
-    for (let i = 0; i < this.distCost.length; ++i) {
-      this.distCost[i].print();
-      costTotal += this.distCost[i].cost;
-    }
-    //console.log(`Total cost: ${costTotal}`);
-  }
-
-  toString() {
-    let s = "";
-    for (let i = 0; i < this.distCost.length; ++i) {
-      s += this.distCost[i].toString();
-    }
-    //console.log(`Total cost: ${this.costTotal}`);
-    return `${s} : TOTAL: ${this.costTotal}`;
-  }
-
-  calcTotalCost() {
-    this.costTotal = 0;
-    for (let i = 0; i < this.distCost.length; ++i) {
-      this.costTotal += this.distCost[i].cost;
-    }
-  }
-}
-
-class DistCost {
-  constructor(idFrom, idTo, cost) {
-    this.idFrom = idFrom;
-    this.idTo = idTo;
-    this.cost = cost;
-  }
-
-  print() {
-    console.log(`${this.idFrom}>${this.idTo}: ${this.cost}`);
-  }
-
-  toString() {
-    return `${this.idFrom}>${this.idTo} (${this.cost})   |`;
-  }
-}
-
-class HamBox {
-  constructor(id) {
-    this.id = id;
-    this.distCost = [];
-  }
-  addDistCost(distCost) {
-    this.distCost.push(distCost);
-  }
-}
+import { HamBox, Route, DistCost } from "./models.js";
 
 let boxes;
 let routes;
@@ -64,11 +8,20 @@ let boxCount = 3;
 let boxMin = 2;
 let boxMax = boxIndexes.length;
 
+//Program starts here when the DOM is ready
 window.addEventListener("load", function() {
   console.log("Hambotic: ONLINE");
+
+  document.getElementById("calc").addEventListener("click", recalculateClick);
+  document.getElementById("rand").addEventListener("click", randomClick);
+  document.getElementById("add").addEventListener("click", addBoxClick);
+  document.getElementById("remove").addEventListener("click", removeBoxClick);
+
   restart();
 });
 
+//Restart() called on window load & whenever AddBox()/DeleteBox() is called
+//Reinitialises all HamBox objects and generates new random values for all DistCosts.
 function restart() {
   boxes = [];
 
@@ -80,12 +33,13 @@ function restart() {
   processAll(boxes);
 }
 
+//processAll() called after each box has been given its complete set of DistCost data.
+//We take the HamBox's and create Route objects that store our output data.
 function processAll(boxes) {
   let routesString = getAllRouteCombinations(boxes);
-  //console.log(routesString);
+
   routesString = filterRoutesByStartId(routesString, startId);
   routes = calcRoutes(boxes, routesString);
-  //console.log(routes);
 
   let bestRoute;
   let bestCost = Infinity;
@@ -102,22 +56,28 @@ function processAll(boxes) {
     return a.costTotal - b.costTotal;
   });
 
-  for (let i = 0; i < routes.length; ++i) {
-    //routes[i].print();
-  }
-
-  //printBoxDistances(boxes);
   printRoutes(routes);
 
   placeBoxInputElements(boxes);
 }
 
+//placeBoxInputElements() uses our HamBox objects to add the necissary DOM input elements
+//onto the view
 function placeBoxInputElements(boxes) {
   let containerHead = document.getElementsByClassName("container-head");
+  let eFill = document.createElement("p");
+  eFill.innerHTML = ` `;
+  eFill.className += "head";
+  containerHead[0].appendChild(eFill);
 
   boxes.forEach(element => {
     let eName = document.createElement("p");
     eName.innerHTML = `Box ${element.id}`;
+
+    if (element.id === "A") {
+      eName.innerHTML = `Bay ${element.id}`;
+    }
+
     eName.className += "name";
 
     let eDiv = document.createElement("div");
@@ -127,6 +87,7 @@ function placeBoxInputElements(boxes) {
       let eInput = document.createElement("input");
       eInput.setAttribute("placeholder", `To ${boxes[i].id}..`);
       eInput.setAttribute("type", "number");
+      eInput.setAttribute("min", "0");
       eInput.className += `dist from-${element.id} to-${boxes[i].id}`;
 
       if (element.id === boxes[i].id) {
@@ -156,18 +117,24 @@ function placeBoxInputElements(boxes) {
   containerHead[0].appendChild(eBr);
 }
 
+//recalculateClick() called by the Recalculate button click
+//takes all the user inputs from the view and reruns the routes/boxes calculations
 function recalculateClick() {
   recalculateAll(boxes);
   clearFrontContainer();
   processAll(boxes);
 }
 
+//randomClick() called by the Random All button
+//randomises all DistCost input fields and reloads the DOM to reflect
 function randomClick() {
   randomAll(boxes);
   clearFrontContainer();
   processAll(boxes);
 }
 
+//addBoxClick() called by the Add Box button
+//reloads everything with +1 boxes if the box limit has not been hit
 function addBoxClick() {
   if (boxCount < boxMax) {
     boxCount = Math.max(boxMin, Math.min(boxCount + 1, boxMax));
@@ -176,6 +143,8 @@ function addBoxClick() {
   }
 }
 
+//removeBoxClick() called by the Remove Box button
+//reloads everything with -1 boxes. Will not trigger if the resulting box count would be less than 2
 function removeBoxClick() {
   if (boxCount > boxMin) {
     boxCount = Math.max(boxMin, Math.min(boxCount - 1, boxMax));
@@ -184,6 +153,7 @@ function removeBoxClick() {
   }
 }
 
+//randomAll() gives random dist costs to all boxes
 function randomAll(boxes) {
   let box1;
   let box2;
@@ -199,8 +169,9 @@ function randomAll(boxes) {
   }
 }
 
+//recalculateAll() takes user input from the DOM fields and gives the updated
+//DistCost values to our HamBox's
 function recalculateAll(boxes) {
-  console.log("trigger recalc");
   let box1;
   let box2;
   for (let i = 0; i < boxes.length; ++i) {
@@ -222,6 +193,8 @@ function recalculateAll(boxes) {
   }
 }
 
+//clearFrontContainer() removes all updatable DOM elements so that new ones
+//can be placed to reflect changes made to the number of HamBox's and therefore DistCost input fields
 function clearFrontContainer() {
   let div = document.getElementById("container");
   while (div.firstChild) {
@@ -239,6 +212,10 @@ function clearFrontContainer() {
   }
 }
 
+//generateDistCosts() is a more powerful randomAll() for this program
+//it randomises all DistCosts for boxes but also sanitises the number of DistCost objects.
+//this needs to be triggered on window load and whenever a box is added or removed.
+//Perhaps this and randomAll() could be combined with a flag distinguishing the needs.
 function generateDistCosts(boxes) {
   let box;
   let curDist;
@@ -267,9 +244,11 @@ function generateDistCosts(boxes) {
   }
 }
 
+//printRoutes() takes our formatted Route objects and outputs the string details
+//into our DOM list elements
 function printRoutes(routes) {
   let output = document.getElementById("output");
-  let node = document.createElement("ol");
+  let list = document.createElement("ol");
   let s = "";
 
   let filter = document.getElementById("filter");
@@ -280,12 +259,14 @@ function printRoutes(routes) {
     let route = routes[i];
     s = route.toString();
     li.innerHTML = s;
-    output.appendChild(li);
+    list.appendChild(li);
   }
 
-  output.appendChild(node);
+  output.appendChild(list);
 }
 
+//---!!!DEPRECIATED!!! printBoxDistances() outputted HamBox DistCost info directly from HamBox objects
+//Now I use printRoutes that uses our more comprehensive Routes objects.
 function printBoxDistances(boxes) {
   //console.log(boxes);
   let output = document.getElementById("output");
@@ -304,6 +285,8 @@ function printBoxDistances(boxes) {
   }
 }
 
+//filterRoutesByStartId() ensures we only output Routes that begin from our 'Bay XYZ' since
+//this is where Hambotic begins its search. where XYZ is the starting ID
 function filterRoutesByStartId(routesString, startId) {
   let routesNew = [];
 
@@ -315,18 +298,20 @@ function filterRoutesByStartId(routesString, startId) {
   return routesNew;
 }
 
-function getAllRouteCombinations(boxes, startId) {
+//getAllRouteCombinations() is the first step from translating HamBox info into more formatted Route objects.
+//we put it through Keith's combo() to get all possible route combinations as strings.
+function getAllRouteCombinations(boxes) {
   let idCollection = [];
 
   boxes.forEach(element => {
-    //if (element.id === startId) {
     idCollection.push(element.id);
-    //}
   });
 
   return combo(idCollection);
 }
 
+//calcRoutes() uses all possible Route combinations given by getAllRouteCombinations()
+//converts the routesString[]s into Route objects that contain all the info we need from HamBox's
 function calcRoutes(boxes, routesString) {
   let routes = [];
   for (let i = 0; i < routesString.length; ++i) {
@@ -371,6 +356,7 @@ function calcRoutes(boxes, routesString) {
   return routes;
 }
 
+//getBoxById() simple boxes[] lookup given a HamBox.id
 function getBoxById(boxes, id) {
   for (let i = 0; i < boxes.length; ++i) {
     if (boxes[i].id === id) {
@@ -380,6 +366,7 @@ function getBoxById(boxes, id) {
   return null;
 }
 
+//getDistCost() looks up a DistCost.cost given a box and a valid from/to pairing
 function getDistCost(box, from, to) {
   for (let i = 0; i < box.distCost.length; ++i) {
     if (box.distCost[i].idFrom === from && box.distCost[i].idTo === to) {
@@ -389,6 +376,7 @@ function getDistCost(box, from, to) {
   return null;
 }
 
+//getDistCostAsDistCost() works like an overload for getDistCost() that returns an object copy
 function getDistCostAsDistCost(box, from, to) {
   for (let i = 0; i < box.distCost.length; ++i) {
     if (box.distCost[i].idFrom === from && box.distCost[i].idTo === to) {
@@ -399,6 +387,9 @@ function getDistCostAsDistCost(box, from, to) {
   return null;
 }
 
+//checkExistingDistCostBetweenBoxes() is technically DEPRECIATED. It would be used to ensure that
+//2 HamBox's that had identical-but-reversed DistCosts would be given the same distance value
+//This however is not necissarily the case as per the project requirement
 function checkExistingDistCostBetweenBoxes(box1, box2) {
   let boxId1 = box1.id;
   let boxId2 = box2.id;
@@ -416,6 +407,7 @@ function checkExistingDistCostBetweenBoxes(box1, box2) {
   return null;
 }
 
+//setDistCostBetweenBoxes() configure a valid DistCost for the distance between 2 HamBox's
 function setDistCostBetweenBoxes(box1, box2, newCost) {
   let boxId1 = box1.id;
   let boxId2 = box2.id;
@@ -434,19 +426,19 @@ function setDistCostBetweenBoxes(box1, box2, newCost) {
 combo() takes an array and returns a 2D array containing all possible sequences.
 */
 function combo(c) {
-  var r = [],
+  let r = [],
     len = c.length;
-  tmp = [];
+  let tmp = [];
   function nodup() {
-    var got = {};
-    for (var l = 0; l < tmp.length; l++) {
+    let got = {};
+    for (let l = 0; l < tmp.length; l++) {
       if (got[tmp[l]]) return false;
       got[tmp[l]] = true;
     }
     return true;
   }
   function iter(col, done) {
-    var l, rr;
+    let l, rr;
     if (col === len) {
       if (nodup()) {
         rr = [];

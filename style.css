@@ -30,3 +30,11 @@ input.dist {
 button {
   margin: 10px 5px;
 }
+
+ol {
+  list-style-type: decimal;
+}
+
+li {
+  margin: 15px;
+}
